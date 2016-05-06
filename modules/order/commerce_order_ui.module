@@ -33,6 +33,7 @@ function commerce_order_ui_menu() {
   );
 
   $items['admin/commerce/orders/%commerce_order'] = array(
+    'load arguments' => array(FALSE),
     'title callback' => 'commerce_order_ui_order_title',
     'title arguments' => array(3),
     'page callback' => 'commerce_order_ui_order_view',
@@ -84,6 +85,7 @@ function commerce_order_ui_menu() {
   );
 
   $items['user/%user/orders/%commerce_order'] = array(
+    'load arguments' => array(FALSE),
     'title callback' => 'commerce_order_ui_order_title',
     'title arguments' => array(3),
     'page callback' => 'commerce_order_ui_order_view',

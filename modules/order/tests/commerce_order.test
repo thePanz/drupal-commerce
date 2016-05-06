@@ -121,3 +121,89 @@ class CommerceOrderCRUDTestCase extends CommerceBaseTestCase {
     $this->assertEqual(token_replace('[commerce-order:changed]', array('commerce-order' => $order)), format_date($order->changed, 'medium'), '[commerce-order:changed] was replaced with the changed date.');
   }
 }
+
+/**
+ * Test order locking.
+ */
+class CommerceOrderLockingTestCase extends CommerceBaseTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name'        => 'Order locking',
+      'description' => 'Test the order locking.',
+      'group'       => 'Drupal Commerce',
+    );
+  }
+
+  protected function setUp() {
+    $modules = parent::setUpHelper('api');
+    $modules[] = 'commerce_cart';
+    parent::setUp($modules);
+  }
+
+  /**
+   * Test releasing order locks.
+   */
+  public function testCommerceOrderReleaseLocking() {
+    /** @var CommerceOrderEntityController $order_controller */
+    $order_controller = entity_get_controller('commerce_order');
+    $created_order = $this->createDummyOrder();
+
+    // The order is locked when loaded from commerce_cart_order_load(), however
+    // it should not be locked because it was then saved.
+    $this->assertFalse(commerce_order_is_locked($created_order), 'Generated and saved order is unlocked.');
+
+    // Ensure that loading locked and unlocked orders works.
+    $order = commerce_order_load($created_order->order_id);
+    $this->assertTrue(commerce_order_is_locked($order), 'commerce_order_load() returned an locked order from controller.');
+    commerce_order_release_lock($order);
+    $this->assertFalse(commerce_order_is_locked($order), 'commerce_order_load() returned an unlocked order.');
+
+    $order = commerce_order_load($created_order->order_id, FALSE);
+    $this->assertFalse(commerce_order_is_locked($order), 'commerce_order_load() returned an unlocked order.');
+
+    $locked_order = commerce_order_load($created_order->order_id);
+    $this->assertTrue(commerce_order_is_locked($locked_order), 'commerce_order_load() returned a locked order.');
+
+    $order_controller->releaseLocking();
+    $this->assertFalse(commerce_order_is_locked($locked_order), 'Order is not locked once all locks released.');
+  }
+
+  /**
+   * Test skip locking.
+   */
+  public function testCommerceOrderSkipLocking() {
+    /** @var CommerceOrderEntityController $order_controller */
+    $order_controller = entity_get_controller('commerce_order');
+    $created_order = $this->createDummyOrder();
+
+    // Ensure that skipLocking() works.
+    $order_controller->requestSkipLocking();
+    $unlocked_order = commerce_order_load($created_order->order_id);
+    $this->assertFalse(commerce_order_is_locked($unlocked_order), 'commerce_order_load() returned an unlocked order.');
+
+    // Turn off skipLocking().
+    $order_controller->requestSkipLocking(FALSE);
+    // Our previous loaded order is not considered locked.
+    $this->assertFalse(commerce_order_is_locked($unlocked_order), 'commerce_order_load() returned a unlocked order.');
+    // Re-loading the order will lock it.
+    $unlocked_order = commerce_order_load($created_order->order_id);
+    $this->assertTrue(commerce_order_is_locked($unlocked_order), 'commerce_order_load() returned a locked order.');
+  }
+
+  /**
+   * Test controller entity caching.
+   */
+  public function testCommerceOrderControllerCaching() {
+    $created_order = $this->createDummyOrder();
+
+    $this->assertTrue(commerce_order_is_cached($created_order));
+    $created_order->data['test_cached_data_attribute'] = TRUE;
+
+    $unlocked_cached_order = commerce_order_load($created_order->order_id, FALSE);
+    $this->assertTrue($unlocked_cached_order->data['test_cached_data_attribute'], 'Requesting read-only order loaded from controller entity cache has same data attribute.');
+
+    $locked_order = commerce_order_load($created_order->order_id);
+    $this->assertFalse(isset($locked_order->data['test_cached_data_attribute']), 'Loading a locked order reset controller entity cache for specific item.');
+  }
+}
