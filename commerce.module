@@ -374,6 +374,16 @@ function commerce_embed_view($view_id, $display_id, $arguments, $override_url = 
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function commerce_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'commerce') . '/includes/views',
+  );
+}
+
+/**
  * Returns the e-mail address from which to send commerce related e-mails.
  *
  * Currently this is just using the site's e-mail address, but this may be

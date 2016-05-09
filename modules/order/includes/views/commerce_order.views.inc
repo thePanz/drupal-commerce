@@ -17,6 +17,7 @@ function commerce_order_views_data() {
     'title' => t('Commerce Order'),
     'help' => t('Order placed in the store.'),
     'access query tag' => 'commerce_order_access',
+    'query class' => 'commerce_views_query',
   );
   $data['commerce_order']['table']['entity type'] = 'commerce_order';
 

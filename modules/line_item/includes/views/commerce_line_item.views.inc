@@ -17,6 +17,7 @@ function commerce_line_item_views_data() {
     'title' => t('Commerce Line Item'),
     'help' => t('A line item referenced by another entity.'),
     'access query tag' => 'commerce_line_item_access',
+    'query class' => 'commerce_views_query',
   );
   $data['commerce_line_item']['table']['entity type'] = 'commerce_line_item';
 

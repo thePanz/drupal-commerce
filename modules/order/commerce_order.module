@@ -629,7 +629,7 @@ function commerce_order_form_commerce_customer_customer_profile_delete_form_alte
           if ($entity_type == 'commerce_order') {
             // Load the referencing order.
             $order = reset($data);
-            $order = commerce_order_load($order->order_id);
+            $order = commerce_order_load($order->order_id, FALSE);
 
             // Only exit here if the order is in a non-cart status.
             if (!in_array($order->status, array_keys(commerce_order_statuses(array('cart' => TRUE))))) {

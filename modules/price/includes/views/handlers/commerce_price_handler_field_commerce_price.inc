@@ -4,7 +4,7 @@
  * An extension of the default Views field handler that supports aggregating
  * price fields.
  */
-class commerce_price_handler_field_commerce_price extends views_handler_field_field {
+class commerce_price_handler_field_commerce_price extends commerce_views_handler_field_field {
   function get_value($values, $field = NULL) {
     // If this field has aggregation enabled...
     if (!empty($this->group_fields)) {
