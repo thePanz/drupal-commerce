@@ -147,7 +147,7 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
    */
   protected function releaseLocks() {
     if (empty($this->lockedEntities)) {
-      unset($this->controllerTransaction);
+      $this->controllerTransaction = NULL;
     }
   }
 
@@ -157,7 +157,7 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
    * on all entities at once, although be cautious with this.
    */
   public function releaseLocking() {
-    unset($this->controllerTransaction);
+    $this->controllerTransaction = NULL;
     $this->lockedEntities = array();
   }
 
