@@ -68,6 +68,8 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
 
   /**
    * Stores our transaction object, necessary for pessimistic locking to work.
+   *
+   * @var DatabaseTransaction
    */
   protected $controllerTransaction = NULL;
 
@@ -75,6 +77,8 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
    * Stores the ids of locked entities.
    *
    * Necessary for knowing when to release lock by committing the transaction.
+   *
+   * @var array
    */
   protected $lockedEntities = array();
 
@@ -82,6 +86,8 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
    * Stores the flag for if a condition has been passed for requesting locking.
    *
    * By default, locking is always requested unless specifically set to false.
+   *
+   * @var bool
    */
   protected $requestLocking = TRUE;
 
@@ -90,6 +96,8 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
    *
    * If locking has been requested as well it will take preference and the
    * entity load will default to locking.
+   *
+   * @var bool
    */
   protected $requestSkipLocking = FALSE;
 
