@@ -43,9 +43,9 @@ class CommerceViewsQuery extends views_plugin_query_default {
   }
 
   /**
-   * Returns the according entity objects for the given query results.
+   * Returns the entity objects for the given query results.
    *
-   * Mimics the same behaviour of views_plugin_query, but allows admins to define
+   * Mimics the behaviour of views_plugin_query, but allows admins to define
    * if the loaded orders should be locked or not.
    *
    */
@@ -67,7 +67,7 @@ class CommerceViewsQuery extends views_plugin_query_default {
     }
     $table_data = views_fetch_data($base_table);
 
-    // Bail out if the table has not specified the according entity-type.
+    // Bail out if the table has not specified the entity-type.
     if (!isset($table_data['table']['entity type'])) {
       return FALSE;
     }
