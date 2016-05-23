@@ -545,7 +545,8 @@ function commerce_cart_commerce_product_calculate_sell_price_line_item_alter($li
   // and avoid any untraceable recursive loops.
   // @see http://drupal.org/node/1268472
   if (empty($line_item->order_id)) {
-    $order = commerce_cart_order_load($user->uid);
+    // Since we do not need to save the order, load it without locking.
+    $order = commerce_cart_order_load($user->uid, FALSE);
 
     if ($order) {
       $line_item->order_id = $order->order_id;
@@ -605,22 +606,22 @@ function commerce_cart_user_login(&$edit, $account) {
 function commerce_cart_user_update(&$edit, $account, $category) {
   // If the e-mail address was changed...
   if (!empty($edit['original']->mail) && $account->mail != $edit['original']->mail) {
-    // Load the user's shopping cart orders.
+    // Load the user's shopping cart orders that have the old email address.
     $query = new EntityFieldQuery();
 
     $query
       ->entityCondition('entity_type', 'commerce_order', '=')
       ->propertyCondition('uid', $account->uid, '=')
+      ->propertyCondition('mail', $account->mail, '<>')
       ->propertyCondition('status', array_keys(commerce_order_statuses(array('cart' => TRUE))), 'IN');
 
     $result = $query->execute();
 
     if (!empty($result['commerce_order'])) {
       foreach (commerce_order_load_multiple(array_keys($result['commerce_order'])) as $order) {
-        if ($order->mail != $account->mail) {
-          $order->mail = $account->mail;
-          commerce_order_save($order);
-        }
+        // Updating the order eMail with the new account's one.
+        $order->mail = $account->mail;
+        commerce_order_save($order);
       }
     }
   }
@@ -800,17 +801,19 @@ function theme_commerce_cart_empty_page() {
  * @param $uid
  *   The uid of the customer whose cart to load. If left 0, attempts to load
  *   an anonymous order from the session.
+ * @param bool $lock
+ *    Define if the loaded Order should be locked when loading it.
  *
  * @return
  *   The fully loaded shopping cart order or FALSE if nonexistent.
  */
-function commerce_cart_order_load($uid = 0) {
+function commerce_cart_order_load($uid = 0, $lock = TRUE) {
   // Retrieve the order ID for the specified user's current shopping cart.
   $order_id = commerce_cart_order_id($uid);
 
   // If a valid cart order ID exists for the user, return it now.
   if (!empty($order_id)) {
-    return commerce_order_load($order_id);
+    return commerce_order_load($order_id, $lock);
   }
 
   return FALSE;
