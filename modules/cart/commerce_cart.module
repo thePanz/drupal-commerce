@@ -74,7 +74,7 @@ function commerce_cart_menu_item_title() {
   $title = t('Shopping cart');
 
   // If the user actually has a cart order...
-  if ($order = commerce_cart_order_load($user->uid)) {
+  if ($order = commerce_cart_order_load($user->uid, FALSE)) {
     // Count the number of product line items on the order.
     $wrapper = entity_metadata_wrapper('commerce_order', $order);
     $quantity = commerce_line_items_quantity($wrapper->commerce_line_items, commerce_product_line_item_types());
@@ -656,7 +656,7 @@ function commerce_cart_block_view($delta) {
     $content = theme('commerce_cart_empty_block');
 
     // First check to ensure there are products in the shopping cart.
-    if ($order = commerce_cart_order_load($user->uid)) {
+    if ($order = commerce_cart_order_load($user->uid, FALSE)) {
       $wrapper = entity_metadata_wrapper('commerce_order', $order);
 
       // If there are one or more products in the cart...
@@ -1432,7 +1432,7 @@ function commerce_cart_product_add_by_id($product_id, $quantity = 1, $combine = 
   global $user;
 
   // If the specified product exists...
-  if ($product = commerce_product_load($product_id)) {
+  if ($product = commerce_product_load($product_id, FALSE)) {
     // Create a new product line item for it.
     $line_item = commerce_product_line_item_new($product, $quantity);
 
@@ -2289,7 +2289,7 @@ function commerce_cart_add_to_cart_form_attributes_refresh($form, $form_state) {
   // Then render and return the various product fields that might need to be
   // updated on the page.
   if (!empty($form_state['context'])) {
-    $product = commerce_product_load($form_state['default_product_id']);
+    $product = commerce_product_load($form_state['default_product_id'], FALSE);
     $form_state['default_product'] = $product;
     $product->display_context = $form_state['context'];
 
@@ -2396,7 +2396,7 @@ function commerce_cart_add_to_cart_views_form_refresh($form, $form_state) {
  */
 function commerce_cart_add_to_cart_form_submit($form, &$form_state) {
   $product_id = $form_state['values']['product_id'];
-  $product = commerce_product_load($product_id);
+  $product = commerce_product_load($product_id, FALSE);
 
   // If the line item passed to the function is new...
   if (empty($form_state['line_item']->line_item_id)) {

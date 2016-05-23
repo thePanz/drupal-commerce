@@ -923,7 +923,7 @@ function commerce_payment_transaction_delete_multiple($transaction_ids) {
  */
 function commerce_payment_transaction_access($op, $transaction, $account = NULL) {
   if (isset($transaction->order_id)) {
-    $order = commerce_order_load($transaction->order_id);
+    $order = commerce_order_load($transaction->order_id, FALSE);
     if (!$order) {
       return FALSE;
     }

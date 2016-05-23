@@ -9,7 +9,6 @@ class commerce_payment_handler_field_payment_transaction_link_delete extends com
     // Ensure the user has access to delete this payment transaction.
     $transaction_id = $this->get_value($values, 'transaction_id');
     $order_id = $this->get_value($values, 'order_id');
-    $order = commerce_order_load($order_id);
     $transaction = commerce_payment_transaction_load($transaction_id);
 
     if (commerce_payment_transaction_access('delete', $transaction)) {

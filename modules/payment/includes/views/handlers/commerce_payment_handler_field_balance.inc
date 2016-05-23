@@ -44,7 +44,7 @@ class commerce_payment_handler_field_balance extends views_handler_field {
     $order_id = $this->get_value($values, 'order_id');
 
     // Only render this field if we find a valid order.
-    if (!empty($order_id) && $order = commerce_order_load($order_id)) {
+    if (!empty($order_id) && $order = commerce_order_load($order_id, FALSE)) {
       $balance = commerce_payment_order_balance($order);
 
       // Output according to the format selected as with price fields.

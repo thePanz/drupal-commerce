@@ -280,7 +280,8 @@ function commerce_product_pre_calculate_sell_prices($from = NULL, $count = 1) {
   }
 
   while ($product_id = $query->fetchField()) {
-    $product = commerce_product_load($product_id);
+    // Load the product, no locking is required since we do not have to save it.
+    $product = commerce_product_load($product_id, FALSE);
 
     // If the product is valid for pre-calculation...
     if (commerce_product_valid_pre_calculation_product($product)) {
