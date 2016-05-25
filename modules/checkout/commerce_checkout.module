@@ -15,6 +15,7 @@ function commerce_checkout_menu() {
 
   $items['checkout/%commerce_order'] = array(
     'title' => 'Checkout',
+    'load arguments' => array(FALSE),
     'page callback' => 'commerce_checkout_router',
     'page arguments' => array(1),
     'access arguments' => array('access checkout'),
@@ -23,6 +24,7 @@ function commerce_checkout_menu() {
   );
   $items['checkout/%commerce_order/%commerce_checkout_page'] = array(
     'title' => 'Checkout',
+    'load arguments' => array(FALSE),
     'page callback' => 'commerce_checkout_router',
     'page arguments' => array(1, 2),
     'access arguments' => array('access checkout'),
