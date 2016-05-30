@@ -184,10 +184,15 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
       // value already set on the entity will be replaced with the entity as
       // saved. This will allow any original entity comparisons in the current
       // save process to react to the most recently saved version of the entity.
-      if (!empty($entity->{$this->idKey})) {
+      if (!empty($entity->{$this->idKey}) && !isset($entity->original)) {
+        // Setting the entity entity_load_unchanged status to true, so other
+        // modules can react properly.
+        $entity->entity_load_unchanged = TRUE;
         // In order to properly work in case of name changes, load the original
         // entity using the id key if it is available.
         $entity->original = entity_load_unchanged($this->entityType, $entity->{$this->idKey});
+        // Remove the entity_load_unchanged status.
+        unset($entity->entity_load_unchanged);
       }
 
       $this->invoke('presave', $entity);

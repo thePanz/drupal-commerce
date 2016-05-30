@@ -744,6 +744,12 @@ function commerce_cart_commerce_order_load($orders) {
   $refreshed = &drupal_static(__FUNCTION__, array());
 
   foreach ($orders as $order) {
+    // If the order is in entity_load_unchanged status, we do not need to
+    // refresh the cart.
+    if (!empty($order->entity_load_unchanged)) {
+      continue;
+    }
+
     // Refresh only if this order object represents the latest revision of a
     // shopping cart order, it hasn't been refreshed already in this request
     // and it meets the criteria in the shopping cart refresh settings.
