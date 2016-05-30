@@ -351,9 +351,6 @@ function commerce_checkout_form_validate($form, &$form_state) {
 function commerce_checkout_form_submit($form, &$form_state) {
   $checkout_page = $form_state['checkout_page'];
 
-  // Load a fresh copy of the order stored in the form.
-  $order = commerce_order_load($form_state['order']->order_id);
-
   // If we are going to redirect with checkout pane messages stored in the form
   // state, they will not be displayed on a subsequent form build like normal.
   // Move them out of the form state messages array and into the current
@@ -368,6 +365,9 @@ function commerce_checkout_form_submit($form, &$form_state) {
   if (end($form_state['triggering_element']['#array_parents']) == 'continue') {
     // If there is another checkout page...
     if ($checkout_page['next_page']) {
+      // Load a fresh copy of the order stored in the form.
+      $order = commerce_order_load($form_state['order']->order_id);
+
       // Update the order status to reflect the next checkout page.
       $order = commerce_order_status_update($order, 'checkout_' . $checkout_page['next_page'], FALSE, NULL, t('Customer continued to the next checkout page via a submit button.'));
 

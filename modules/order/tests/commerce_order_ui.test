@@ -60,11 +60,8 @@ class CommerceOrderUIAdminTest extends CommerceBaseTestCase {
     $this->drupalPost(NULL, array('name' => $this->store_customer->name), t('Save order', array(), array('context' => 'a drupal commerce order')));
 
     // Load the order from database for later use.
-    $orders = commerce_order_load_multiple(array(), array('uid' => $this->store_customer->uid));
+    $orders = commerce_order_load_multiple(array(), array('uid' => $this->store_customer->uid, '_lock' => FALSE));
     $this->order = reset($orders);
-
-    // Reset the cache as we don't want to keep the lock.
-    entity_get_controller('commerce_order')->resetCache();
 
     // Enable an additional currency.
     $this->enableCurrencies(array('EUR'));
@@ -150,10 +147,7 @@ class CommerceOrderUIAdminTest extends CommerceBaseTestCase {
     $this->drupalPost(NULL, array(), t('Save order', array(), array('context' => 'a drupal commerce order')));
 
     // Reload the order directly from db.
-    $order = commerce_order_load_multiple(array($this->order->order_id), array(), TRUE);
-
-    // Reset the cache as we don't want to keep the lock.
-    entity_get_controller('commerce_order')->resetCache();
+    $order = commerce_order_load_multiple(array($this->order->order_id), array('_lock' => FALSE), TRUE);
 
     // Check if the product has been added to the order.
     foreach (entity_metadata_wrapper('commerce_order', reset($order))->commerce_line_items as $delta => $line_item_wrapper) {
@@ -186,12 +180,9 @@ class CommerceOrderUIAdminTest extends CommerceBaseTestCase {
     $this->drupalPost(NULL, array(), t('Save order', array(), array('context' => 'a drupal commerce order')));
 
     // Reload the order directly from db and wrap it to get the line item ids.
-    $orders = commerce_order_load_multiple(array($this->order->order_id), array(), TRUE);
+    $orders = commerce_order_load_multiple(array($this->order->order_id), array('_lock' => FALSE), TRUE);
     $order = reset($orders);
     $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-
-    // Reset the cache as we don't want to keep the lock.
-    entity_get_controller('commerce_order')->resetCache();
 
     // Also wrap the product to access easier to its price.
     $product_wrapper = entity_metadata_wrapper('commerce_product', $this->product);
@@ -264,8 +255,6 @@ class CommerceOrderUIAdminTest extends CommerceBaseTestCase {
 
     // Check if the links for editing the order are present.
     $links = menu_contextual_links('commerce-order', 'admin/commerce/orders', array($this->order->order_id));
-    // Reset the cache as we don't want to keep the lock.
-    entity_get_controller('commerce_order')->resetCache();
     $this->assertRaw((theme('links', array('links' => $links, 'attributes' => array('class' => array('links', 'inline', 'operations'))))), t('Links for orders are present'));
 
     $this->drupalGet('admin/commerce/orders/'. $this->order->order_id . '/view');

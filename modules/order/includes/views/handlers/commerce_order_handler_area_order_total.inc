@@ -32,7 +32,7 @@ class commerce_order_handler_area_order_total extends views_handler_area {
           // If it is single value...
           if (count($argument->value) == 1) {
             // Load the order.
-            if ($order = commerce_order_load(reset($argument->value))) {
+            if ($order = commerce_order_load(reset($argument->value), FALSE)) {
 
               // Prepare a display settings array.
               $display = array(

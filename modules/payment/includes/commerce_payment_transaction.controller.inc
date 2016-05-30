@@ -160,7 +160,7 @@ class CommercePaymentTransactionEntityController extends DrupalCommerceEntityCon
    */
   public function buildContent($transaction, $view_mode = 'administrator', $langcode = NULL, $content = array()) {
     // Load the order this transaction is attached to.
-    $order = commerce_order_load($transaction->order_id);
+    $order = commerce_order_load($transaction->order_id, FALSE);
 
     // Add the default fields inherent to the transaction entity.
     if (!empty($transaction->instance_id) && $payment_method = commerce_payment_method_instance_load($transaction->instance_id)) {

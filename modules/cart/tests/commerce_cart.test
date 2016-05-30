@@ -509,10 +509,8 @@ class CommerceCartTestCaseAnonymousToAuthenticated extends CommerceCartTestCase 
     $this->drupalPost('node/' . $this->product_node->nid, array(), t('Add to cart'));
 
     // Get the order just created.
-    $orders = commerce_order_load_multiple(array(), array('uid' => $user->uid, 'status' => 'cart'), TRUE);
+    $orders = commerce_order_load_multiple(array(), array('uid' => $user->uid, 'status' => 'cart', '_lock' => FALSE), TRUE);
     $order_anonymous = reset($orders);
-    // Reset the cache as we don't want to keep the lock.
-    entity_get_controller('commerce_order')->resetCache();
 
     // Access to the cart and check if the product is in it.
     $this->drupalGet($this->getCommerceUrl('cart'));
@@ -530,10 +528,9 @@ class CommerceCartTestCaseAnonymousToAuthenticated extends CommerceCartTestCase 
     $this->drupalPost('user', array('name' => $this->store_customer->name, 'pass' => $this->store_customer->pass_raw), t('Log in'));
 
     // Get the order for user just logged in.
-    $orders = commerce_order_load_multiple(array(), array('uid' => $this->store_customer->uid, 'status' => 'cart'), TRUE);
+    $orders = commerce_order_load_multiple(array(), array('uid' => $this->store_customer->uid, 'status' => 'cart', '_lock' => FALSE), TRUE);
     $order_authenticated = reset($orders);
     // Reset the cache as we don't want to keep the lock.
-    entity_get_controller('commerce_order')->resetCache();
 
     // Access to the cart and check if the product is in it.
     $this->drupalGet($this->getCommerceUrl('cart'));
@@ -545,4 +542,44 @@ class CommerceCartTestCaseAnonymousToAuthenticated extends CommerceCartTestCase 
     $this->assertTrue($order_anonymous->order_id == $order_authenticated->order_id, t('Cart has been converted successfully'));
   }
 
+}
+
+class CommerceCartOrderLockingTest extends CommerceCartTestCase {
+  /**
+   * Product that is being added to the cart.
+   */
+  protected $product;
+
+  /**
+   * Product display.
+   */
+  protected $product_node;
+
+
+  /**
+   * Implementation of getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Shopping cart order locking test',
+      'description' => 'Test that the cart refresh does not remove the order lock.',
+      'group' => 'Drupal Commerce',
+    );
+  }
+
+  /**
+   * Implementation of setUp().
+   */
+  function setUp() {
+    parent::setUpHelper('ui');
+  }
+
+  public function testCartRefreshOrderLock() {
+    $created_order = $this->createDummyOrder();
+    $this->assertFalse(commerce_order_is_locked($created_order), t('The generated and saved order is not locked.'));
+    $order = commerce_order_load($created_order->order_id);
+    $this->assertTrue(commerce_order_is_locked($order), t('The loaded order is locked.'));
+    commerce_cart_order_refresh($order);
+    $this->assertTrue(commerce_order_is_locked($order), t('After a "Cart refresh" the order is still lock.'));
+  }
 }

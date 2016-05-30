@@ -629,7 +629,7 @@ function commerce_order_form_commerce_customer_customer_profile_delete_form_alte
           if ($entity_type == 'commerce_order') {
             // Load the referencing order.
             $order = reset($data);
-            $order = commerce_order_load($order->order_id);
+            $order = commerce_order_load($order->order_id, FALSE);
 
             // Only exit here if the order is in a non-cart status.
             if (!in_array($order->status, array_keys(commerce_order_statuses(array('cart' => TRUE))))) {
@@ -746,17 +746,27 @@ function commerce_order_save($order) {
 
 /**
  * Loads an order by ID.
+ *
+ * @param $order_id
+ *   The order id.
+ * @param $lock
+ *   Whether to lock the loaded order.
  */
-function commerce_order_load($order_id) {
-  $orders = commerce_order_load_multiple(array($order_id), array());
+function commerce_order_load($order_id, $lock = TRUE) {
+  $orders = commerce_order_load_multiple(array($order_id), array('_lock' => $lock), FALSE);
   return $orders ? reset($orders) : FALSE;
 }
 
 /**
  * Loads an order by number.
+ *
+ * @param $order_number
+ *   The order number.
+ * @param $lock
+ *   Whether to lock the loaded order.
  */
-function commerce_order_load_by_number($order_number) {
-  $orders = commerce_order_load_multiple(array(), array('order_number' => $order_number));
+function commerce_order_load_by_number($order_number, $lock = TRUE) {
+  $orders = commerce_order_load_multiple(array(), array('order_number' => $order_number, '_lock' => $lock), FALSE);
   return $orders ? reset($orders) : FALSE;
 }
 
@@ -780,6 +790,42 @@ function commerce_order_load_by_number($order_number) {
  */
 function commerce_order_load_multiple($order_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('commerce_order', $order_ids, $conditions, $reset);
+}
+
+ /**
+  * Determines whether or not the given order object is locked.
+  *
+  * @param $order
+  *   A fully loaded order object.
+  *
+  * @return
+  *   Boolean indicating whether or not the order object is locked.
+  */
+function commerce_order_is_locked($order) {
+  return entity_get_controller('commerce_order')->isLocked($order);
+}
+
+/**
+ * Determines whether or not the given order object is cached.
+ *
+ * @param $order
+ *   A fully loaded order object.
+ *
+ * @return
+ *   Boolean indicating whether or not the order object is cached.
+ */
+function commerce_order_is_cached($order) {
+  return entity_get_controller('commerce_order')->isCached($order);
+}
+
+/**
+ * Releases an order's lock.
+ *
+ * @param $order
+ *   A fully loaded order object.
+ */
+function commerce_order_release_lock($order) {
+  entity_get_controller('commerce_order')->releaseLock($order);
 }
 
 /**

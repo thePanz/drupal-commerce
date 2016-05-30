@@ -13,7 +13,7 @@ function commerce_cart_checkout_router() {
   global $user;
 
   // Load the shopping cart order.
-  if ($order = commerce_cart_order_load($user->uid)) {
+  if ($order = commerce_cart_order_load($user->uid, FALSE)) {
     $wrapper = entity_metadata_wrapper('commerce_order', $order);
   }
 
@@ -38,7 +38,7 @@ function commerce_cart_view() {
   $content = theme('commerce_cart_empty_page');
 
   // First check to make sure we have a valid order.
-  if ($order = commerce_cart_order_load($user->uid)) {
+  if ($order = commerce_cart_order_load($user->uid, FALSE)) {
     $wrapper = entity_metadata_wrapper('commerce_order', $order);
 
     // Only show the cart form if we found product line items.

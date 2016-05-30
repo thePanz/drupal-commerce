@@ -17,6 +17,7 @@ function commerce_product_views_data() {
     'title' => t('Commerce Product'),
     'help' => t('Products from the store.'),
     'access query tag' => 'commerce_product_access',
+    'query class' => 'commerce_views_query',
   );
   $data['commerce_product']['table']['entity type'] = 'commerce_product';
 

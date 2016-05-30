@@ -11,3 +11,7 @@ files[] = tests/commerce_base.test
 
 ; Central Entity Controller.
 files[] = includes/commerce.controller.inc
+
+; Views related includes.
+files[] = includes/views/commerce_views_query.inc
+files[] = includes/views/handlers/commerce_views_handler_field_field.inc

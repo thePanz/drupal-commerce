@@ -857,8 +857,8 @@ function commerce_payment_transaction_save($transaction) {
 /**
  * Loads a payment transaction by ID.
  */
-function commerce_payment_transaction_load($transaction_id) {
-  $transactions = commerce_payment_transaction_load_multiple(array($transaction_id), array());
+function commerce_payment_transaction_load($transaction_id, $lock = TRUE) {
+  $transactions = commerce_payment_transaction_load_multiple(array($transaction_id), array('_lock' => $lock));
   return $transactions ? reset($transactions) : FALSE;
 }
 
@@ -923,7 +923,7 @@ function commerce_payment_transaction_delete_multiple($transaction_ids) {
  */
 function commerce_payment_transaction_access($op, $transaction, $account = NULL) {
   if (isset($transaction->order_id)) {
-    $order = commerce_order_load($transaction->order_id);
+    $order = commerce_order_load($transaction->order_id, FALSE);
     if (!$order) {
       return FALSE;
     }

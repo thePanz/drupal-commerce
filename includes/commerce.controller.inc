@@ -7,18 +7,191 @@
  * A full fork of Entity API's controller, with support for revisions.
  */
 
-class DrupalCommerceEntityController extends DrupalDefaultEntityController implements EntityAPIControllerInterface {
+/**
+ * Interface for the default Drupal Commerce entity controller.
+ */
+interface DrupalCommerceEntityControllerInterface extends EntityAPIControllerInterface {
+
+  /**
+   * Determines whether the provided entity is locked.
+   *
+   * @param object $entity
+   *   The entity to check.
+   *
+   * @return bool
+   *   True if the entity is locked, false otherwise.
+   */
+  public function isLocked($entity);
+
+  /**
+   * Determines whether the provided entity is cached.
+   *
+   * @param object $entity
+   *   The entity to check.
+   *
+   * @return bool
+   *   True if the entity is cached, false otherwise.
+   */
+  public function isCached($entity);
+
+  /**
+   * Request that locking be skipped.
+   *
+   * Actual skipping of locking may or may not be possible.
+   *
+   * @param bool $skip_locking
+   *   The boolean indicating whether locking should be skipped.
+   */
+  public function requestSkipLocking($skip_locking);
+
+  /**
+   * Releases locking on all entities, use with caution.
+   */
+  public function releaseLocking();
+
+  /**
+   * Releases the lock on an entity.
+   *
+   * @param object $entity
+   *   The entity to release the lock for.
+   */
+  public function releaseLock($entity);
+
+}
+
+/**
+ * Default implementation of DrupalCommerceEntityControllerInterface.
+ *
+ * Provides base entity controller for Drupal Commerce entities.
+ */
+class DrupalCommerceEntityController extends DrupalDefaultEntityController implements DrupalCommerceEntityControllerInterface {
 
   /**
    * Stores our transaction object, necessary for pessimistic locking to work.
+   *
+   * @var DatabaseTransaction
    */
   protected $controllerTransaction = NULL;
 
   /**
-   * Stores the ids of locked entities, necessary for knowing when to release a
-   * lock by committing the transaction.
+   * Stores the ids of locked entities.
+   *
+   * Necessary for knowing when to release lock by committing the transaction.
+   *
+   * @var array
    */
   protected $lockedEntities = array();
+
+  /**
+   * Stores the flag for if a condition has been passed for requesting locking.
+   *
+   * By default, locking is always requested unless specifically set to false.
+   *
+   * @var bool
+   */
+  protected $requestLocking = TRUE;
+
+  /**
+   * Stores whether a request for skipping locking has been set.
+   *
+   * If locking has been requested as well it will take preference and the
+   * entity load will default to locking.
+   *
+   * @var bool
+   */
+  protected $requestSkipLocking = FALSE;
+
+  /**
+   * Implements DrupalCommerceEntityControllerInterface::isLocked().
+   */
+  public function isLocked($entity) {
+    return $this->controllerTransaction && isset($this->lockedEntities[$entity->{$this->idKey}]);
+  }
+
+  /**
+   * Implements DrupalCommerceEntityControllerInterface::isCached().
+   */
+  public function isCached($entity) {
+    return isset($this->entityCache[$entity->{$this->idKey}]);
+  }
+
+  /**
+   * Implements DrupalCommerceEntityControllerInterface::requestSkipLocking().
+   */
+  public function requestSkipLocking($skip_locking = TRUE) {
+    $this->requestSkipLocking = $skip_locking;
+
+    return $this;
+  }
+
+  /**
+   * Implements DrupalCommerceEntityControllerInterface::releaseLock().
+   */
+  public function releaseLock($entity) {
+    // Maintain the list of locked entities and release the lock if possible.
+    unset($this->lockedEntities[$entity->{$this->idKey}]);
+    $this->releaseLocks();
+  }
+
+  /**
+   * Determines whether the current entity type requires locking.
+   *
+   * @return bool
+   *   True if locking is required, false otherwise.
+   */
+  protected function requireLocking() {
+    $enabled = isset($this->entityInfo['locking mode']) && $this->entityInfo['locking mode'] == 'pessimistic';
+    $not_skipped = empty($this->requestSkipLocking);
+
+    return $enabled && $not_skipped && $this->requestLocking;
+  }
+
+  /**
+   * Checks the list of tracked locked entities, and if it's empty, commits
+   * the transaction in order to remove the acquired locks.
+   *
+   * The transaction is not necessarily committed immediately. Drupal will
+   * commit it as soon as possible given the state of the transaction stack.
+   */
+  protected function releaseLocks() {
+    if (empty($this->lockedEntities)) {
+      $this->controllerTransaction = NULL;
+    }
+  }
+
+  /**
+   * Removes all locking for the controller, mostly used for testing
+   * if you want to stop locking and run something else, or you want to cancel locking
+   * on all entities at once, although be cautious with this.
+   */
+  public function releaseLocking() {
+    $this->controllerTransaction = NULL;
+    $this->lockedEntities = array();
+  }
+
+  /**
+   * Overrides DrupalDefaultEntityController::load().
+   *
+   * Accepts a condition of locking request, may not necessarily take effect
+   * as other options can override locking. If anything conflicts, locking always
+   * take precedence over not locking.
+   */
+  public function load($ids = array(), $conditions = array()) {
+    // Lock by default if the caller didn't indicate a preference.
+    $conditions += array('_lock' => TRUE);
+    $this->requestLocking = $conditions['_lock'];
+    unset($conditions['_lock']);
+
+    // If locking has been required, then bypass the internal cache for any
+    // entities that are not already locked.
+    if ($this->requireLocking()) {
+      foreach (array_diff_key(array_flip($ids), $this->lockedEntities) as $id => $value) {
+        unset($this->entityCache[$id]);
+      }
+    }
+
+    return parent::load($ids, $conditions);
+  }
 
   /**
    * Override of DrupalDefaultEntityController::buildQuery().
@@ -28,7 +201,7 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
   protected function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
     $query = parent::buildQuery($ids, $conditions, $revision_id);
 
-    if (isset($this->entityInfo['locking mode']) && $this->entityInfo['locking mode'] == 'pessimistic') {
+    if ($this->requireLocking()) {
       // In pessimistic locking mode, we issue the load query with a FOR UPDATE
       // clause. This will block all other load queries to the loaded objects
       // but requires us to start a transaction.
@@ -46,41 +219,6 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
     }
 
     return $query;
-  }
-
-  public function resetCache(array $ids = NULL) {
-    parent::resetCache($ids);
-
-    // Maintain the list of locked entities, so that the releaseLock() method
-    // can know when it's time to commit the transaction.
-    if (!empty($this->lockedEntities)) {
-      if (isset($ids)) {
-        foreach ($ids as $id) {
-          unset($this->lockedEntities[$id]);
-        }
-      }
-      else {
-        $this->lockedEntities = array();
-      }
-    }
-
-    // Try to release the lock, if possible.
-    $this->releaseLock();
-  }
-
-  /**
-   * Checks the list of tracked locked entities, and if it's empty, commits
-   * the transaction in order to remove the acquired locks.
-   *
-   * The transaction is not necessarily committed immediately. Drupal will
-   * commit it as soon as possible given the state of the transaction stack.
-   */
-  protected function releaseLock() {
-    if (isset($this->entityInfo['locking mode']) && $this->entityInfo['locking mode'] == 'pessimistic') {
-      if (empty($this->lockedEntities)) {
-        unset($this->controllerTransaction);
-      }
-    }
   }
 
   /**
@@ -140,6 +278,12 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
       }
       // Reset the cache as soon as the changes have been applied.
       $this->resetCache($ids);
+
+      // Maintain the list of locked entities and release the lock if possible.
+      foreach ($ids as $id) {
+        unset($this->lockedEntities[$id]);
+      }
+      $this->releaseLocks();
 
       foreach ($entities as $id => $entity) {
         $this->invoke('delete', $entity);
@@ -244,7 +388,7 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
 
       // Maintain the list of locked entities and release the lock if possible.
       unset($this->lockedEntities[$entity->{$this->idKey}]);
-      $this->releaseLock();
+      $this->releaseLock($entity);
 
       $this->invoke($op, $entity);
 

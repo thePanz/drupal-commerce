@@ -17,6 +17,7 @@ function commerce_payment_views_data() {
     'title' => t('Commerce Payment Transaction'),
     'help' => t('The receipt of a payment transaction.'),
     'access query tag' => 'commerce_payment_transaction_access',
+    'query class' => 'commerce_views_query',
   );
   $data['commerce_payment_transaction']['table']['entity type'] = 'commerce_payment_transaction';
 
