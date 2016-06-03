@@ -1788,7 +1788,7 @@ function commerce_cart_add_to_cart_form($form, &$form_state, $line_item, $show_q
   );
 
   // Load all the active products intended for sale on this form.
-  $products = commerce_product_load_multiple($product_ids, array('status' => 1));
+  $products = commerce_product_load_multiple($product_ids, array('status' => 1, '_lock' => FALSE));
 
   // If no products were returned...
   if (count($products) == 0) {
@@ -2611,7 +2611,7 @@ function commerce_cart_field_formatter_view($entity_type, $entity, $field, $inst
 
   if ($display['type'] == 'commerce_cart_add_to_cart_form') {
     // Load the referenced products.
-    $products = commerce_product_load_multiple($product_ids);
+    $products = commerce_product_load_multiple($product_ids, array('_lock' => FALSE));
 
     // Check to ensure products are referenced, before returning results.
     if (!empty($products)) {

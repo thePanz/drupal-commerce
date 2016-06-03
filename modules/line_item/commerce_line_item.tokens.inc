@@ -110,7 +110,7 @@ function commerce_line_item_tokens($type, $tokens, array $data = array(), array 
         // Default values for the chained tokens handled below.
         case 'order':
           if ($line_item->order_id) {
-            $order = commerce_order_load($line_item->order_id);
+            $order = commerce_order_load($line_item->order_id, FALSE);
             $replacements[$original] = $sanitize ? check_plain($order->order_number) : $order->order_number;
           }
           break;
@@ -126,7 +126,7 @@ function commerce_line_item_tokens($type, $tokens, array $data = array(), array 
     }
 
     if ($order_tokens = token_find_with_prefix($tokens, 'order')) {
-      $order = commerce_order_load($line_item->order_id);
+      $order = commerce_order_load($line_item->order_id, FALSE);
       $replacements += token_generate('commerce-order', $order_tokens, array('commerce-order' => $order), $options);
     }
 

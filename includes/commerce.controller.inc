@@ -24,6 +24,14 @@ interface DrupalCommerceEntityControllerInterface extends EntityAPIControllerInt
   public function isLocked($entity);
 
   /**
+   * Set a lock for the provided entity.
+   *
+   * @param object $entity
+   *   The entity to lock.
+   */
+  public function setLock($entity);
+
+  /**
    * Determines whether the provided entity is cached.
    *
    * @param object $entity
@@ -105,7 +113,41 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
    * Implements DrupalCommerceEntityControllerInterface::isLocked().
    */
   public function isLocked($entity) {
-    return $this->controllerTransaction && isset($this->lockedEntities[$entity->{$this->idKey}]);
+    return $this->controllerTransaction && !empty($this->lockedEntities[$entity->{$this->idKey}]);
+  }
+
+  /**
+   * Implements DrupalCommerceEntityControllerInterface::setLock()
+   */
+  public function setLock($entity) {
+    $this->setLockById($entity->{$this->idKey});
+  }
+
+  /**
+   * @param $entityId
+   */
+  protected function setLockById($entityId) {
+    if (empty($entityId)) {
+      return;
+    }
+
+    $this->lockedEntities[$entityId] = TRUE;
+  }
+
+  /**
+   *
+   * @param array $entityIds
+   *  The list of EntityIDs to be marked as locked.
+   */
+  protected function setLockByIds($entityIds) {
+    // Flip the list of entity IDs: faster intersection with already locked ones.
+    $ids = array_flip($entityIds);
+    $ids = array_diff_key($ids, $this->lockedEntities);
+
+    // Lock the entities that aren't yet locked.
+    foreach(array_keys($ids) as $id) {
+      $this->setLockById($id);
+    }
   }
 
   /**
@@ -190,7 +232,14 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
       }
     }
 
-    return parent::load($ids, $conditions);
+    $entities = parent::load($ids, $conditions);
+
+    // Lock the loaded entities, if required.
+    if (!empty($entities) && $this->requireLocking()) {
+      $this->setLockByIds(array_keys($entities));
+    }
+
+    return $entities;
   }
 
   /**
@@ -210,12 +259,6 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
       }
 
       $query->forUpdate();
-
-      // Store the ids of the entities in the lockedEntities array for later
-      // tracking, flipped for easier management via unset() below.
-      if (is_array($ids)) {
-        $this->lockedEntities += array_flip($ids);
-      }
     }
 
     return $query;

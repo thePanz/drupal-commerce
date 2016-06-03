@@ -53,16 +53,26 @@ class commerce_line_item_handler_field_edit_delete extends views_handler_field {
   }
 
   function views_form_submit($form, &$form_state) {
-    $order = commerce_order_load($form_state['order']->order_id);
     $field_name = $this->options['id'];
+    $removed_items = array();
 
+    // Scan the form, looking for removed items.
     foreach (element_children($form[$field_name]) as $row_id) {
       // Check for the removal of an item.
       if ($form_state['triggering_element']['#name'] == 'delete-line-item-' . $row_id) {
-        $line_item_id = $form[$field_name][$row_id]['#line_item_id'];
-        // TODO: Remove this dependence on the Cart module API.
-        commerce_cart_order_product_line_item_delete($order, $line_item_id);
+        $removed_items[] = $form[$field_name][$row_id]['#line_item_id'];
       }
+    }
+
+    // Proceed with order update as soon as an item got removed.
+    if (!empty($removed_items)) {
+      $order = commerce_order_load($form_state['order']->order_id);
+      foreach ($removed_items as $line_item_id) {
+        // TODO: Remove this dependence on the Cart module API.
+        commerce_cart_order_product_line_item_delete($order, $line_item_id, TRUE);
+      }
+
+      commerce_order_save($order);
     }
   }
 
