@@ -246,11 +246,11 @@ function commerce_product_reference_form_commerce_product_product_delete_form_al
           if ($entity_type == 'commerce_line_item') {
             // Load the referencing line item.
             $line_item = reset($data);
-            $line_item = commerce_line_item_load($line_item->line_item_id);
+            $line_item = commerce_line_item_load($line_item->line_item_id, FALSE);
 
             // Implement a soft dependency on the Order module to show a little
             // more information in the non-deletion message.
-            if (!empty($line_item->order_id) && $order = commerce_order_load($line_item->order_id)) {
+            if (!empty($line_item->order_id) && $order = commerce_order_load($line_item->order_id, FALSE)) {
               $description = t('This product is referenced by a line item on Order @order_number and therefore cannot be deleted. Disable it instead.', array('@order_number' => $order->order_number));
             }
             else {
@@ -812,7 +812,7 @@ function commerce_product_reference_field_formatter_view($entity_type, $entity, 
   }
 
   // Load the referenced products.
-  $products = commerce_product_load_multiple($product_ids, array('status' => 1));
+  $products = commerce_product_load_multiple($product_ids, array('status' => 1, '_lock' => FALSE));
 
   switch ($display['type']) {
     case 'commerce_product_reference_sku_link':
@@ -1010,7 +1010,7 @@ function commerce_product_reference_autocomplete_validate($element, &$form_state
     // Loop through all the entered SKUs...
     foreach ($typed_skus as $typed_sku) {
       // To see if the product actually exists...
-      if ($product = commerce_product_load_by_sku(trim($typed_sku))) {
+      if ($product = commerce_product_load_by_sku(trim($typed_sku), FALSE)) {
         // And store its product ID for later validation.
         $value[] = array('product_id' => $product->product_id);
       }
@@ -1309,8 +1309,8 @@ function commerce_product_line_item_add_form($element, &$form_state) {
  *   NULL if all is well or an error message if something goes wrong.
  */
 function commerce_product_line_item_add_form_submit(&$line_item, $element, &$form_state, $form) {
-  // Load the selected product.
-  if ($product = commerce_product_load_by_sku($element['actions']['product_sku']['#value'])) {
+  // Load the selected product, no locking required.
+  if ($product = commerce_product_load_by_sku($element['actions']['product_sku']['#value'], FALSE, FALSE)) {
     // Populate the line item with the product data.
     commerce_product_line_item_populate($line_item, $product);
   }
