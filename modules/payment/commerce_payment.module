@@ -857,7 +857,7 @@ function commerce_payment_transaction_save($transaction) {
 /**
  * Loads a payment transaction by ID.
  */
-function commerce_payment_transaction_load($transaction_id, $lock = TRUE) {
+function commerce_payment_transaction_load($transaction_id, $lock = FALSE) {
   $transactions = commerce_payment_transaction_load_multiple(array($transaction_id), array('_lock' => $lock));
   return $transactions ? reset($transactions) : FALSE;
 }

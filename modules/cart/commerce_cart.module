@@ -813,7 +813,7 @@ function theme_commerce_cart_empty_page() {
  * @return
  *   The fully loaded shopping cart order or FALSE if nonexistent.
  */
-function commerce_cart_order_load($uid = 0, $lock = TRUE) {
+function commerce_cart_order_load($uid = 0, $lock = FALSE) {
   // Retrieve the order ID for the specified user's current shopping cart.
   $order_id = commerce_cart_order_id($uid);
 

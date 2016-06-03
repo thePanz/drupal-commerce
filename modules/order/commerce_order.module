@@ -752,7 +752,7 @@ function commerce_order_save($order) {
  * @param $lock
  *   Whether to lock the loaded order.
  */
-function commerce_order_load($order_id, $lock = TRUE) {
+function commerce_order_load($order_id, $lock = FALSE) {
   $orders = commerce_order_load_multiple(array($order_id), array('_lock' => $lock), FALSE);
   return $orders ? reset($orders) : FALSE;
 }
@@ -765,7 +765,7 @@ function commerce_order_load($order_id, $lock = TRUE) {
  * @param $lock
  *   Whether to lock the loaded order.
  */
-function commerce_order_load_by_number($order_number, $lock = TRUE) {
+function commerce_order_load_by_number($order_number, $lock = FALSE) {
   $orders = commerce_order_load_multiple(array(), array('order_number' => $order_number, '_lock' => $lock), FALSE);
   return $orders ? reset($orders) : FALSE;
 }

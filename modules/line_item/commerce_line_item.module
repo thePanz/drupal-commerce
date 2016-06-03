@@ -604,7 +604,7 @@ function commerce_line_item_save($line_item) {
 /**
  * Loads a line item by ID.
  */
-function commerce_line_item_load($line_item_id, $lock = TRUE) {
+function commerce_line_item_load($line_item_id, $lock = FALSE) {
   $line_items = commerce_line_item_load_multiple(array($line_item_id), array('_lock' => $lock));
   return $line_items ? reset($line_items) : FALSE;
 }

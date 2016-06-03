@@ -220,7 +220,7 @@ class DrupalCommerceEntityController extends DrupalDefaultEntityController imple
    */
   public function load($ids = array(), $conditions = array()) {
     // Lock by default if the caller didn't indicate a preference.
-    $conditions += array('_lock' => TRUE);
+    $conditions += array('_lock' => FALSE);
     $this->requestLocking = $conditions['_lock'];
     unset($conditions['_lock']);
 

@@ -499,7 +499,7 @@ function commerce_product_save($product) {
 /**
  * Loads a product by ID.
  */
-function commerce_product_load($product_id, $lock = TRUE) {
+function commerce_product_load($product_id, $lock = FALSE) {
   if (empty($product_id)) {
     return FALSE;
   }
@@ -515,7 +515,7 @@ function commerce_product_load($product_id, $lock = TRUE) {
  * @param bool $reset
  *    Boolean to reset static cache.
  */
-function commerce_product_load_by_sku($sku, $reset = FALSE, $lock = TRUE) {
+function commerce_product_load_by_sku($sku, $reset = FALSE, $lock = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   if (!isset($cache[$sku]) || $reset) {
     $products = commerce_product_load_multiple(array(), array('sku' => $sku, '_lock' => $lock));
